@@ -17,7 +17,12 @@ const moves = {
   },
   "32": { //default space 32
     name: "hard",
-    func: () => {}
+    func: () => {
+      currentPiece.top += squaresToBottom();
+      solidifyPiece();
+      clearLines(); //clear lines
+      currentPiece = pickNewPiece();
+    }
   },
   "39": { //default right arrow 39
     name: "right",
@@ -155,8 +160,6 @@ window.onkeydown = function(e) {
    var key = e.keyCode ? e.keyCode : e.which;
 
    if(moves[key]) {
-     atBottom();
-
      console.log(moves[key].name);
      moves[key].func();
      draw();
@@ -202,7 +205,9 @@ function draw() {
 }
 
 //returns true if the piece is touching the bottom, else false
-function atBottom() {
+function squaresToBottom() {
+  let minSquaresToBottom = -1;
+
   for(let currentW=0; currentW<currentPiece.array[0].length; ++currentW) {
     let pieceBottom = 0;
     //from bottom to top, find the lowest block
@@ -222,12 +227,13 @@ function atBottom() {
       }
     }
 
-    if(pieceBottom >= gameBottom) {
-      return true; //true if the piece is now touching the bottom
+    const squaresToBottom = gameBottom-pieceBottom;
+    if(minSquaresToBottom===-1 || minSquaresToBottom>squaresToBottom) {
+      minSquaresToBottom = squaresToBottom;
     }
   }
 
-  return false; //false if the piece is not touching the bottom
+  return minSquaresToBottom;
 }
 
 
@@ -302,7 +308,8 @@ function canMoveLeft() {
 
 
 function drop() {
-  if(atBottom()) {
+  console.log(squaresToBottom());
+  if(squaresToBottom() <= 0) {
     solidifyPiece();
     clearLines(); //clear lines
     currentPiece = pickNewPiece();
