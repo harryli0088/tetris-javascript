@@ -22,7 +22,7 @@ const moves = {
   "39": { //default right arrow 39
     name: "right",
     func: () => {
-      if(currentPiece.left + currentPiece.array[0].length < WIDTH) {
+      if(canMoveRight()) {
         currentPiece.left++;
       }
     }
@@ -193,8 +193,10 @@ function draw() {
   //draw piece
   for(let h=0; h<currentPiece.array.length; ++h) {
     for(let w=0; w<currentPiece.array[h].length; ++w) {
-      ctx.fillStyle = currentPiece.array[h][w]===1 ? pieces[ currentPiece.pieceIndex ].color : "gray";
-      ctx.fillRect((w+currentPiece.left)*squarePixelWidth, (h+currentPiece.top)*squarePixelWidth, squarePixelWidth, squarePixelWidth);
+      if(currentPiece.array[h][w]===1) {
+        ctx.fillStyle = pieces[ currentPiece.pieceIndex ].color;
+        ctx.fillRect((w+currentPiece.left)*squarePixelWidth, (h+currentPiece.top)*squarePixelWidth, squarePixelWidth, squarePixelWidth);
+      }
     }
   }
 }
@@ -212,13 +214,13 @@ function atBottom() {
     }
     pieceBottom += currentPiece.top;
 
+    //find the highest piece in this column
     let gameBottom = grid.length-1;
-    for(gameBottom; gameBottom>=0; --gameBottom) {
-      if(grid[gameBottom][currentPiece.left + w] === "gray") {
-        break;
+    for(let h=grid.length-1; h>=0; --h) {
+      if(grid[h][currentPiece.left + w] !== "gray") {
+        gameBottom = h-1;
       }
     }
-
 
     if(pieceBottom >= gameBottom) {
       return true; //true if the piece is now touching the bottom
@@ -226,6 +228,38 @@ function atBottom() {
   }
 
   return false; //false if the piece is not touching the bottom
+}
+
+
+function canMoveRight() {
+  for(let currentH=0; currentH<currentPiece.array.length; ++currentH) {
+    if(currentPiece.top + currentH >= 0) {
+      let pieceRight = 0;
+      //from right to left, find the right-most block
+      for(let currentW=currentPiece.array[currentH].length-1; currentW>=0; --currentW) {
+        if(currentPiece.array[currentH][currentW] === 1) {
+          pieceRight = currentW;
+          break;
+        }
+      }
+      pieceRight += currentPiece.left;
+
+      //find pieces right of this piece
+      let gameRight = pieceRight+1;
+      console.log(currentPiece.top + currentH);
+      for(gameRight; gameRight<grid[0].length; ++gameRight) {
+        if(grid[currentPiece.top + currentH][gameRight] !== "gray") {
+          break;
+        }
+      }
+
+      if(pieceRight + 1 >= gameRight) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 
@@ -243,9 +277,7 @@ function drop() {
 function solidifyPiece() {
   for(let h=0; h<currentPiece.array.length; ++h) {
     for(let w=0; w<currentPiece.array[h].length; ++w) {
-      console.log(currentPiece.array[h][w]);
       if(currentPiece.array[h][w] === 1) {
-        console.log(currentPiece.left + w,currentPiece.top + h, pieces[ currentPiece.pieceIndex ].color);
         grid[currentPiece.top + h][currentPiece.left + w] = pieces[ currentPiece.pieceIndex ].color;
       }
     }
