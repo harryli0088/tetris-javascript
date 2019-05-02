@@ -30,7 +30,7 @@ const moves = {
   "37": { //default left arrow 37
     name: "left",
     func: () => {
-      if(currentPiece.left > 0) {
+      if(canMoveLeft()) {
         currentPiece.left--;
       }
     }
@@ -203,12 +203,12 @@ function draw() {
 
 //returns true if the piece is touching the bottom, else false
 function atBottom() {
-  for(let w=0; w<currentPiece.array[0].length; ++w) {
+  for(let currentW=0; currentW<currentPiece.array[0].length; ++currentW) {
     let pieceBottom = 0;
     //from bottom to top, find the lowest block
-    for(let h=currentPiece.array.length-1; h>=0; --h) {
-      if(currentPiece.array[h][w] === 1) {
-        pieceBottom = h;
+    for(let currentH=currentPiece.array.length-1; currentH>=0; --currentH) {
+      if(currentPiece.array[currentH][currentW] === 1) {
+        pieceBottom = currentH;
         break;
       }
     }
@@ -217,7 +217,7 @@ function atBottom() {
     //find the highest piece in this column
     let gameBottom = grid.length-1;
     for(let h=grid.length-1; h>=0; --h) {
-      if(grid[h][currentPiece.left + w] !== "gray") {
+      if(grid[h][currentPiece.left + currentW] !== "gray") {
         gameBottom = h-1;
       }
     }
@@ -261,6 +261,42 @@ function canMoveRight() {
 
   return true;
 }
+
+
+
+
+function canMoveLeft() {
+  for(let currentH=0; currentH<currentPiece.array.length; ++currentH) {
+    if(currentPiece.top + currentH >= 0) {
+      let pieceLeft = 0;
+      //from left to right, find the left-most block
+      for(let currentW=0; currentW<currentPiece.array[currentH].length; ++currentW) {
+        if(currentPiece.array[currentH][currentW] === 1) {
+          pieceLeft = currentW;
+          break;
+        }
+      }
+      pieceLeft += currentPiece.left;
+
+      //find pieces right of this piece
+      let gameLeft = pieceLeft-1;
+      console.log(currentPiece.top + currentH);
+      for(gameLeft; gameLeft>=0; --gameLeft) {
+        if(grid[currentPiece.top + currentH][gameLeft] !== "gray") {
+          break;
+        }
+      }
+
+      if(pieceLeft - 1 <= gameLeft) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+
 
 
 function drop() {
