@@ -11,7 +11,7 @@ const moves = {
       }
     }
   },
-  "40": { //efault arrow down 40
+  "40": { //default arrow down 40
     name: "drop",
     func: drop
   },
@@ -299,9 +299,12 @@ function canMoveLeft() {
 
 
 
+
+
 function drop() {
   if(atBottom()) {
     solidifyPiece();
+    clearLines(); //clear lines
     currentPiece = pickNewPiece();
   }
   else {
@@ -317,6 +320,36 @@ function solidifyPiece() {
         grid[currentPiece.top + h][currentPiece.left + w] = pieces[ currentPiece.pieceIndex ].color;
       }
     }
+  }
+}
+
+
+
+function clearLines() {
+  let clearIndcies = [];
+  for(let h=0; h<grid.length; ++h) {
+    let noEmptySquares = true;
+    for(let w=0; w<grid[h].length; ++w) {
+      if(grid[h][w] === "gray") {
+        noEmptySquares = false;
+        break;
+      }
+    }
+
+    if(noEmptySquares) {
+      clearIndcies.push(h);
+    }
+  }
+
+  for(let i=0; i<clearIndcies.length; ++i) {
+    grid.splice(clearIndcies[i],1);
+  }
+  let newRow = []
+  for(let i=0; i<WIDTH; ++i) {
+    newRow.push("gray");
+  }
+  for(let i=0; i<clearIndcies.length; ++i) {
+    grid.unshift(JSON.parse(JSON.stringify(newRow)));
   }
 }
 
