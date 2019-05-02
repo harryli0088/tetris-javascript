@@ -1,13 +1,19 @@
 const moves = {
   "67": { //default c 67
     name: "hold",
-    func: () => {}
+    func: () => {
+      if(hold.canHold) {
+        //swap pieces in hold
+        currentPieceIndex = currentPiece.pieceIndex;
+        currentPiece = pickNewPiece(hold.pieceIndex!==-1 ? hold.pieceIndex : undefined);
+        hold.pieceIndex = currentPieceIndex;
+        hold.canHold = false;
+      }
+    }
   },
   "40": { //efault arrow down 40
     name: "drop",
-    func: () => {
-      currentPiece.top++;
-    }
+    func: drop
   },
   "32": { //default space 32
     name: "hard",
@@ -16,7 +22,7 @@ const moves = {
   "39": { //default right arrow 39
     name: "right",
     func: () => {
-      if(currentPiece.left + currentPiece.array[0].length < width) {
+      if(currentPiece.left + currentPiece.array[0].length < WIDTH) {
         currentPiece.left++;
       }
     }
@@ -103,11 +109,11 @@ let pieces = [
   }
 ]
 
-const width = 10;
-const height = 20;
+const WIDTH = 10;
+const HEIGHT = 20;
 const pixelWidth = 400;
 const pixelHeight = 800;
-const squarePixelWidth = pixelWidth / width;
+const squarePixelWidth = pixelWidth / WIDTH;
 
 let grid = []; //grid of static pieces that have already dropped
 let currentPiece = {
@@ -116,13 +122,18 @@ let currentPiece = {
   pieceIndex: -1,
   array: []
 };
+let hold = {
+  pieceIndex: -1,
+  canHold: true
+};
+
 
 function init() {
   let row = [];
-  for(let i=0; i<width; ++i) {
+  for(let i=0; i<WIDTH; ++i) {
     row.push("gray");
   }
-  for(let i=0; i<height; ++i) {
+  for(let i=0; i<HEIGHT; ++i) {
     grid.push(JSON.parse(JSON.stringify(row)));
   }
 
@@ -144,6 +155,8 @@ window.onkeydown = function(e) {
    var key = e.keyCode ? e.keyCode : e.which;
 
    if(moves[key]) {
+     atBottom();
+
      console.log(moves[key].name);
      moves[key].func();
      draw();
@@ -152,8 +165,11 @@ window.onkeydown = function(e) {
 
 
 
-function pickNewPiece() {
-  const index = Math.floor( Math.random()*(pieces.length-1) );
+function pickNewPiece(index) {
+  if(index == undefined) {
+    index = Math.floor( Math.random()*(pieces.length-1) );
+  }
+
   return {
     left: 3, //squares from the left
     top: -1*pieces[index].start.length+1, //squares from the top
@@ -177,20 +193,72 @@ function draw() {
   //draw piece
   for(let h=0; h<currentPiece.array.length; ++h) {
     for(let w=0; w<currentPiece.array[h].length; ++w) {
-      console.log(h,w,currentPiece.array[h][w]);
       ctx.fillStyle = currentPiece.array[h][w]===1 ? pieces[ currentPiece.pieceIndex ].color : "gray";
-      console.log(currentPiece.top);
       ctx.fillRect((w+currentPiece.left)*squarePixelWidth, (h+currentPiece.top)*squarePixelWidth, squarePixelWidth, squarePixelWidth);
     }
   }
 }
 
+//returns true if the piece is touching the bottom, else false
+function atBottom() {
+  for(let w=0; w<currentPiece.array[0].length; ++w) {
+    let pieceBottom = 0;
+    //from bottom to top, find the lowest block
+    for(let h=currentPiece.array.length-1; h>=0; --h) {
+      if(currentPiece.array[h][w] === 1) {
+        pieceBottom = h;
+        break;
+      }
+    }
+    pieceBottom += currentPiece.top;
 
-function autoDrop() {
-  currentPiece.top++;
+    let gameBottom = grid.length-1;
+    for(gameBottom; gameBottom>=0; --gameBottom) {
+      if(grid[gameBottom][currentPiece.left + w] === "gray") {
+        break;
+      }
+    }
+
+
+    if(pieceBottom >= gameBottom) {
+      return true; //true if the piece is now touching the bottom
+    }
+  }
+
+  return false; //false if the piece is not touching the bottom
+}
+
+
+function drop() {
+  if(atBottom()) {
+    solidifyPiece();
+    currentPiece = pickNewPiece();
+  }
+  else {
+    currentPiece.top++;
+  }
+}
+
+
+function solidifyPiece() {
+  for(let h=0; h<currentPiece.array.length; ++h) {
+    for(let w=0; w<currentPiece.array[h].length; ++w) {
+      console.log(currentPiece.array[h][w]);
+      if(currentPiece.array[h][w] === 1) {
+        console.log(currentPiece.left + w,currentPiece.top + h, pieces[ currentPiece.pieceIndex ].color);
+        grid[currentPiece.top + h][currentPiece.left + w] = pieces[ currentPiece.pieceIndex ].color;
+      }
+    }
+  }
+}
+
+
+function auto() {
+  drop();
+
   draw();
 }
-setInterval(autoDrop, 1000);
+setInterval(auto, 1000);
 
 
 init();
