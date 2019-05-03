@@ -308,6 +308,7 @@ function nextPiece() {
   solidifyPiece();
   clearLines();
   currentPiece = pickNewPiece();
+  hold.canHold = true;
 }
 
 
