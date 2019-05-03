@@ -19,9 +19,7 @@ const moves = {
     name: "hard",
     func: () => {
       currentPiece.top += squaresToBottom();
-      solidifyPiece();
-      clearLines(); //clear lines
-      currentPiece = pickNewPiece();
+      nextPiece();
     }
   },
   "39": { //default right arrow 39
@@ -219,15 +217,15 @@ function squaresToBottom() {
     }
     pieceBottom += currentPiece.top;
 
-    //find the highest piece in this column
-    let gameBottom = grid.length-1;
-    for(let h=grid.length-1; h>=0; --h) {
-      if(grid[h][currentPiece.left + currentW] !== "gray") {
-        gameBottom = h-1;
+    //find the closest piece in this column
+    let gameBottom = pieceBottom + 1;
+    for(gameBottom; gameBottom<grid.length; ++gameBottom) {
+      if(grid[gameBottom][currentPiece.left + currentW] !== "gray") {
+        break;
       }
     }
 
-    const squaresToBottom = gameBottom-pieceBottom;
+    const squaresToBottom = gameBottom - pieceBottom - 1;
     if(minSquaresToBottom===-1 || minSquaresToBottom>squaresToBottom) {
       minSquaresToBottom = squaresToBottom;
     }
@@ -252,7 +250,6 @@ function canMoveRight() {
 
       //find pieces right of this piece
       let gameRight = pieceRight+1;
-      console.log(currentPiece.top + currentH);
       for(gameRight; gameRight<grid[0].length; ++gameRight) {
         if(grid[currentPiece.top + currentH][gameRight] !== "gray") {
           break;
@@ -286,7 +283,6 @@ function canMoveLeft() {
 
       //find pieces right of this piece
       let gameLeft = pieceLeft-1;
-      console.log(currentPiece.top + currentH);
       for(gameLeft; gameLeft>=0; --gameLeft) {
         if(grid[currentPiece.top + currentH][gameLeft] !== "gray") {
           break;
@@ -304,15 +300,18 @@ function canMoveLeft() {
 
 
 
+function nextPiece() {
+  solidifyPiece();
+  clearLines(); //clear lines
+  currentPiece = pickNewPiece();
+}
+
 
 
 
 function drop() {
-  console.log(squaresToBottom());
   if(squaresToBottom() <= 0) {
-    solidifyPiece();
-    clearLines(); //clear lines
-    currentPiece = pickNewPiece();
+    nextPiece();
   }
   else {
     currentPiece.top++;
