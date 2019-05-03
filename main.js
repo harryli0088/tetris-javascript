@@ -129,8 +129,10 @@ let hold = {
   pieceIndex: -1,
   canHold: true
 };
+let score = 0;
 
 
+//function to initialize the game
 function init() {
   let row = [];
   for(let i=0; i<WIDTH; ++i) {
@@ -153,10 +155,11 @@ let ctx = canvas.getContext("2d");
 
 
 
-
+//key listener
 window.onkeydown = function(e) {
    var key = e.keyCode ? e.keyCode : e.which;
 
+   //if this key maps to a move
    if(moves[key]) {
      console.log(moves[key].name);
      moves[key].func();
@@ -165,7 +168,8 @@ window.onkeydown = function(e) {
 }
 
 
-
+//picks a new piece and returns for currentPiece
+//if no index is passed, a random one will be chosen
 function pickNewPiece(index) {
   if(index == undefined) {
     index = Math.floor( Math.random()*(pieces.length-1) );
@@ -181,7 +185,7 @@ function pickNewPiece(index) {
 
 
 
-
+//redraws the canvas
 function draw() {
   //draw grid
   for(let h=0; h<grid.length; ++h) {
@@ -202,7 +206,7 @@ function draw() {
   }
 }
 
-//returns true if the piece is touching the bottom, else false
+//returns the minimum number of squares the piece has before hitting the bottom
 function squaresToBottom() {
   let minSquaresToBottom = -1;
 
@@ -234,7 +238,7 @@ function squaresToBottom() {
   return minSquaresToBottom;
 }
 
-
+//returns true if the user can move right, false otherwise
 function canMoveRight() {
   for(let currentH=0; currentH<currentPiece.array.length; ++currentH) {
     if(currentPiece.top + currentH >= 0) {
@@ -267,7 +271,7 @@ function canMoveRight() {
 
 
 
-
+//returns true if the user can move left, false otherwise
 function canMoveLeft() {
   for(let currentH=0; currentH<currentPiece.array.length; ++currentH) {
     if(currentPiece.top + currentH >= 0) {
@@ -299,26 +303,29 @@ function canMoveLeft() {
 }
 
 
-
+//function to run when a piece has hit the bottom
 function nextPiece() {
   solidifyPiece();
-  clearLines(); //clear lines
+  clearLines();
   currentPiece = pickNewPiece();
 }
 
 
 
-
+//function to run to drop the piece (either from user input or auto)
 function drop() {
+  //if this piece has hit the bottom, get the next piece
   if(squaresToBottom() <= 0) {
     nextPiece();
   }
+  //else move the piece down
   else {
     currentPiece.top++;
   }
 }
 
 
+//fix a piece into the grid
 function solidifyPiece() {
   for(let h=0; h<currentPiece.array.length; ++h) {
     for(let w=0; w<currentPiece.array[h].length; ++w) {
@@ -330,41 +337,52 @@ function solidifyPiece() {
 }
 
 
-
+//function to clear the full rows in the grid and add empty rows on top
 function clearLines() {
-  let clearIndcies = [];
+  let clearindecies = []; //array to hold the indecies of the rows to clear
+  //determine which rows need to be cleared
   for(let h=0; h<grid.length; ++h) {
-    let noEmptySquares = true;
+    let noEmptySquares = true; //first assume that this row needs to be cleared
     for(let w=0; w<grid[h].length; ++w) {
       if(grid[h][w] === "gray") {
-        noEmptySquares = false;
+        noEmptySquares = false; //if we encounter an empty square, we know that this row should not be cleared
         break;
       }
     }
 
+    //if we found no empty squares, push this row index into the arrau
     if(noEmptySquares) {
-      clearIndcies.push(h);
+      clearindecies.push(h);
     }
   }
 
-  for(let i=0; i<clearIndcies.length; ++i) {
-    grid.splice(clearIndcies[i],1);
+  score += clearindecies.length; //add one score point for each line cleared
+
+  //remove each row
+  for(let i=0; i<clearindecies.length; ++i) {
+    grid.splice(clearindecies[i],1);
   }
-  let newRow = []
+
+  //create a new empty row
+  let newRow = [];
   for(let i=0; i<WIDTH; ++i) {
     newRow.push("gray");
   }
-  for(let i=0; i<clearIndcies.length; ++i) {
+
+  //add empty rows to the top of the grid
+  for(let i=0; i<clearindecies.length; ++i) {
     grid.unshift(JSON.parse(JSON.stringify(newRow)));
   }
 }
 
 
+//function that runs automatically to drop the pieces
 function auto() {
   drop();
 
   draw();
 }
+
 setInterval(auto, 1000);
 
 
